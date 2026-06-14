@@ -30,3 +30,12 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+.cache
+.config
+.dotnet
+.bash_history
+.gitconfig
+.gnupg
+.ssh
+.vscode-server

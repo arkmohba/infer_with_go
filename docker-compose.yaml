@@ -1,0 +1,16 @@
+services:
+  infer-with-go:
+    image: infer-with-go
+    build: .
+    volumes:
+      - ./:/root
+    working_dir: /root
+    command: bash
+    tty: true
+    deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: 1
+                capabilities: [gpu]
