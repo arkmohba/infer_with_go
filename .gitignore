@@ -39,3 +39,8 @@ go.work.sum
 .gnupg
 .ssh
 .vscode-server
+
+go
+
+*.pt
+*.onnx

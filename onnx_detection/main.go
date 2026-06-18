@@ -145,6 +145,9 @@ func processOutput(output []float32, scaleX,
 }
 
 func DrawBoundingBox(g *gg.Context, bbox BoundingBox) {
+	color := CocoColors[bbox.classID%len(CocoColors)]
+	g.SetRGB(color[0], color[1], color[2])
+	g.SetLineWidth(2)
 	g.DrawRectangle(float64(bbox.x1), float64(bbox.y1), float64(bbox.x2-bbox.x1), float64(bbox.y2-bbox.y1))
 	g.Stroke()
 }
