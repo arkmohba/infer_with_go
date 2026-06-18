@@ -92,9 +92,9 @@ func prepareInput(pic image.Image, dst *ort.Tensor[float32], modelWidth uint, mo
 	pic = resize.Resize(modelWidth, modelHeight, pic, resize.Bilinear)
 
 	i := 0
-	for y := 0; y < 640; y++ {
-		for x := 0; x < 640; x++ {
-			r, g, b, _ := pic.At(x, y).RGBA()
+	for y := range modelHeight {
+		for x := range modelWidth {
+			r, g, b, _ := pic.At(int(x), int(y)).RGBA()
 			redChannel[i] = float32(r>>8) / 255.0
 			greenChannel[i] = float32(g>>8) / 255.0
 			blueChannel[i] = float32(b>>8) / 255.0
@@ -105,21 +105,20 @@ func prepareInput(pic image.Image, dst *ort.Tensor[float32], modelWidth uint, mo
 	return nil
 }
 
-type boundingBox struct {
+type BoundingBox struct {
 	classID        int
 	confidence     float32
 	x1, y1, x2, y2 float32
 }
 
 func processOutput(output []float32, scaleX,
-	scaleY float32) []boundingBox {
-	boundingBoxes := make([]boundingBox, 0, 300)
+	scaleY float32) []BoundingBox {
+	boundingBoxes := make([]BoundingBox, 0, 300)
 
 	var classID int
 	var probability float32
 
-	// Iterate through the output array, considering 8400 indices
-	for idx := 0; idx < 300; idx++ {
+	for idx := range 300 {
 		x1 := output[idx*6+0] * float32(scaleX)
 		y1 := output[idx*6+1] * float32(scaleY)
 		x2 := output[idx*6+2] * float32(scaleX)
@@ -133,7 +132,7 @@ func processOutput(output []float32, scaleX,
 		}
 
 		// Append the bounding box to the result
-		boundingBoxes = append(boundingBoxes, boundingBox{
+		boundingBoxes = append(boundingBoxes, BoundingBox{
 			classID:    classID,
 			confidence: probability,
 			x1:         x1,
@@ -145,7 +144,7 @@ func processOutput(output []float32, scaleX,
 	return boundingBoxes
 }
 
-func DrawBoundingBox(g *gg.Context, bbox boundingBox) {
+func DrawBoundingBox(g *gg.Context, bbox BoundingBox) {
 	g.DrawRectangle(float64(bbox.x1), float64(bbox.y1), float64(bbox.x2-bbox.x1), float64(bbox.y2-bbox.y1))
 	g.Stroke()
 }
@@ -162,11 +161,6 @@ func main() {
 		panic(err)
 	}
 	defer session.Destroy()
-
-	inputData := make([]float32, 1*3*640*640)
-	for i := range inputData {
-		inputData[i] = 0.0
-	}
 
 	img, err := loadImageFile("image.jpg")
 	if err != nil {
@@ -189,7 +183,7 @@ func main() {
 		float32(originalHeight)/float32(modelHeight))
 
 	g := gg.NewContextForImage(img)
-	for idx := 0; idx < len(boxes); idx++ {
+	for idx := range boxes {
 		fmt.Printf("x1:%f y1:%f x2:%f y2:%f\n", boxes[idx].x1, boxes[idx].y1, boxes[idx].x2, boxes[idx].y2)
 		DrawBoundingBox(g, boxes[idx])
 	}
