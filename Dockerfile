@@ -6,6 +6,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-ins
     curl \
     git \
     unzip \
+    python3-pip \
+    libopencv-dev \
     && rm -rf /var/lib/apt/lists/*
 
 

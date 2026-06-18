@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/jpeg"
 	_ "image/jpeg"
 	"os"
 
+	"github.com/fogleman/gg"
 	"github.com/nfnt/resize"
 	ort "github.com/yalue/onnxruntime_go"
 )
@@ -143,6 +145,11 @@ func processOutput(output []float32, scaleX,
 	return boundingBoxes
 }
 
+func DrawBoundingBox(g *gg.Context, bbox boundingBox) {
+	g.DrawRectangle(float64(bbox.x1), float64(bbox.y1), float64(bbox.x2-bbox.x1), float64(bbox.y2-bbox.y1))
+	g.Stroke()
+}
+
 func main() {
 	ort.SetSharedLibraryPath("/usr/local/lib/libonnxruntime.so")
 	// Create ONNX Session
@@ -181,7 +188,21 @@ func main() {
 	boxes := processOutput(session.Output.GetData(), float32(originalWidth)/float32(modelWidth),
 		float32(originalHeight)/float32(modelHeight))
 
+	g := gg.NewContextForImage(img)
 	for idx := 0; idx < len(boxes); idx++ {
 		fmt.Printf("x1:%f y1:%f x2:%f y2:%f\n", boxes[idx].x1, boxes[idx].y1, boxes[idx].x2, boxes[idx].y2)
+		DrawBoundingBox(g, boxes[idx])
 	}
+
+	outFile, err := os.Create("output.jpg")
+	if err != nil {
+		panic(err)
+	}
+	defer outFile.Close()
+
+	err = jpeg.Encode(outFile, g.Image(), &jpeg.Options{Quality: 95})
+	if err != nil {
+		panic(err)
+	}
+
 }
